@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server ROI & Schönrechner</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-2: #7c3aed;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: rgba(15, 23, 42, 0.10);
+            --success: #16a34a;
+            --danger: #dc2626;
+            --radius: 16px;
+            --shadow-sm: 0 6px 16px rgba(2, 6, 23, 0.08);
+            --shadow: 0 14px 40px rgba(2, 6, 23, 0.10);
+            --ring: 0 0 0 4px rgba(37, 99, 235, 0.18);
+        }
+
+        * { box-sizing: border-box; }
+        html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background:
+                radial-gradient(1200px circle at 12% 8%, rgba(37, 99, 235, 0.14), transparent 55%),
+                radial-gradient(900px circle at 92% 0%, rgba(124, 58, 237, 0.12), transparent 55%),
+                var(--bg);
+            color: var(--text);
+            line-height: 1.55;
+            margin: 0;
+            padding: 28px 18px 40px;
+        }
+
+        .container { max-width: 980px; margin: 0 auto; }
+
+        /* Header & Settings */
+        .header-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 18px;
+            position: relative;
+            padding: 18px 18px 16px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.72);
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(10px);
+        }
+
+        .settings-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-self: flex-end;
+            max-width: 100%;
+            padding: 6px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.65);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            margin: 0;
+            text-align: center;
+            width: 100%;
+            padding-top: 10px;
+            font-size: clamp(1.35rem, 2.6vw, 2.1rem);
+            line-height: 1.15;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, var(--primary), var(--primary-2));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            margin: 10px auto 0;
+            max-width: 70ch;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+        
+        @media (max-width: 600px) {
+            .settings-bar { justify-content: flex-end; width: 100%; margin-bottom: 10px; padding-top: 0; }
+            h1 { padding-top: 0; }
+        }
+
+        h2 {
+            font-size: 1.05rem;
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 14px;
+            letter-spacing: 0.01em;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+
+        @media (min-width: 768px) {
+            .grid { grid-template-columns: 1fr 1fr; }
+            .full-width { grid-column: span 2; }
+        }
+
+        .card {
+            background: rgba(255,255,255,0.82);
+            border-radius: var(--radius);
+            padding: 18px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+        }
+
+        .card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 50px rgba(2, 6, 23, 0.12);
+            border-color: rgba(37, 99, 235, 0.20);
+        }
+
+        .input-group { margin-bottom: 15px; }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(15, 23, 42, 0.16);
+            border-radius: 12px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background: rgba(255,255,255,0.86);
+            box-shadow: 0 1px 0 rgba(2, 6, 23, 0.03);
+            transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+            font-variant-numeric: tabular-nums;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: rgba(37, 99, 235, 0.60);
+            box-shadow: var(--ring);
+            background: #fff;
+        }
+
+        .hint { font-size: 0.85rem; color: var(--muted); margin-top: 6px; }
+
+        .power-row { display: flex; gap: 10px; }
+        .power-cost {
+            margin-top: 8px;
+            font-weight: 800;
+            color: rgba(15, 23, 42, 0.92);
+        }
+
+        .sub-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .sub-item:last-child { border-bottom: none; }
+        
+        .sub-left { display: flex; align-items: center; gap: 10px; flex-grow: 1; }
+        .sub-price-wrapper { display: flex; align-items: center; gap: 5px; }
+        .sub-price-input { width: 90px !important; text-align: right; }
+        .sub-count-input { width: 60px !important; text-align: right; }
+        
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+
+        .result-box {
+            color: white;
+            text-align: center;
+            background:
+                radial-gradient(900px circle at 25% 20%, rgba(96, 165, 250, 0.35), transparent 60%),
+                radial-gradient(700px circle at 80% 10%, rgba(192, 132, 252, 0.35), transparent 55%),
+                linear-gradient(180deg, #0b1220 0%, #111827 100%);
+            border: 1px solid rgba(255,255,255,0.10);
+        }
+
+        .big-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 10px 0;
+            color: var(--primary);
+            background: linear-gradient(45deg, #60a5fa, #c084fc);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .stat-item { background: rgba(255,255,255,0.10); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.10); }
+        .stat-label { font-size: 0.8rem; opacity: 0.8; }
+        .stat-value { font-size: 1.1rem; font-weight: bold; }
+        .negative { color: #fca5a5; }
+        .positive { color: #86efac; }
+
+        .scaling-tip {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.10), rgba(124, 58, 237, 0.08));
+            border: 1px solid rgba(37, 99, 235, 0.18);
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        /* Highlight for Ops Costs */
+        .highlight-ops {
+            background: linear-gradient(180deg, rgba(255, 247, 237, 0.95), rgba(255,255,255,0.55));
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(234, 88, 12, 0.22);
+            margin-top: 14px;
+        }
+        
+        .small-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .small-row label { margin: 0; font-weight: normal; font-size: 0.9rem; }
+        .small-row input { width: 90px; padding: 5px; text-align: right; }
+
+        .services-row {
+            display: grid;
+            grid-template-columns: 1fr 90px 90px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .services-row label { margin: 0; font-weight: normal; font-size: 0.9rem; }
+        .services-header {
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        .services-header .col-head {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: rgba(154, 52, 18, 0.85);
+            text-align: right;
+        }
+
+        .hdd-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            margin-bottom: 8px;
+        }
+
+        .hdd-row .col { flex: 1; }
+        .hdd-row .col-small { flex: 0.5; }
+
+        .icon-button {
+            border: 1px solid rgba(15, 23, 42, 0.16);
+            background: rgba(255,255,255,0.86);
+            border-radius: 999px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.92rem;
+            font-weight: 650;
+            color: var(--text);
+            transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
+        }
+
+        .icon-button:hover {
+            transform: translateY(-1px);
+            border-color: rgba(37, 99, 235, 0.35);
+            box-shadow: 0 10px 22px rgba(2, 6, 23, 0.08);
+            background: #fff;
+        }
+
+        .icon-button:active { transform: translateY(0px); }
+        .icon-button:focus { outline: none; box-shadow: var(--ring); }
+
+        .icon-button.small {
+            padding: 6px 10px;
+            font-size: 0.85rem;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 9999;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            color: var(--text);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+            max-width: 560px;
+            width: 100%;
+            padding: 18px;
+        }
+
+        .modal-title {
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            color: var(--danger);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="header-row">
+        <div class="settings-bar">
+            <select id="langSelect" style="width: auto;">
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="en">🇺🇸 English</option>
+            </select>
+            <select id="currSelect" style="width: auto;">
+                <option value="EUR">€ Euro</option>
+                <option value="USD">$ USD</option>
+                <option value="GBP">£ GBP</option>
+                <option value="CHF">Fr CHF</option>
+            </select>
+        </div>
+        <h1 data-i18n="title">🏠 Server / VPS ROI Rechner</h1>
+        <p class="subtitle" data-i18n="subtitle">Rechnet dir deinen Server schön. Und erinnert dich daran, keine weiteren Festplatten zu kaufen.</p>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2 data-i18n="h_hardware">1. Investition (Einmalig)</h2>
+            
+            <div class="input-group">
+                <label data-i18n="l_base">Hardware (Server / PC / Box)</label>
+                <input type="number" id="baseHardware" value="300">
+                <div class="hint" data-i18n="h_base_hint">Hardwarekosten oder Kaufpreis Box</div>
+                <button type="button" id="toggleHardwareDetails" class="icon-button small" style="margin-top: 8px;" data-i18n="btn_hw_details_show">Detailkalkulation</button>
+                <div id="hardwareDetails" style="display:none; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;">
+                    <div class="small-row">
+                        <label data-i18n="hw_cpu">CPU</label>
+                        <input type="number" id="hwCpu" value="0">
+                    </div>
+                    <div class="small-row">
+                        <label data-i18n="hw_ram">RAM</label>
+                        <input type="number" id="hwRam" value="0">
+                    </div>
+                    <div class="small-row">
+                        <label data-i18n="hw_board">Mainboard</label>
+                        <input type="number" id="hwBoard" value="0">
+                    </div>
+                    <div class="small-row">
+                        <label data-i18n="hw_psu">Netzteil</label>
+                        <input type="number" id="hwPsu" value="0">
+                    </div>
+                    <div class="small-row">
+                        <label data-i18n="hw_case">Gehäuse</label>
+                        <input type="number" id="hwCase" value="0">
+                    </div>
+                    <div class="small-row">
+                        <label data-i18n="hw_misc">Sonstiges</label>
+                        <input type="number" id="hwMisc" value="0">
+                    </div>
+                    <div class="small-row">
+                        <label data-i18n="hw_detail_sum">Summe Hardware-Details</label>
+                        <span id="hwDetailTotal">0,00 €</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label data-i18n="l_setup_fee">Setup Gebühr (VPS / Dienst)</label>
+                <input type="number" id="setupFee" value="0">
+                <div class="hint" data-i18n="h_setup_hint">Einmalige Einrichtungsgebühr</div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
+            
+            <div class="input-group">
+                <label data-i18n="l_storage">Festplatten (Optional)</label>
+                <div id="hddList"></div>
+                <button type="button" id="addHddBtn" class="icon-button small" style="margin-top: 8px;" data-i18n="btn_add_hdd">+ Festplatte</button>
+                <div id="storageScaling" class="scaling-tip" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 data-i18n="h_power">2. Laufende Kosten (Monatlich)</h2>
+            
+            <div class="input-group">
+                <label data-i18n="l_watts">Stromverbrauch (Heimserver)</label>
+                <div class="power-row">
+                    <input type="number" id="watts" value="45" placeholder="Watt" data-i18n-placeholder="ph_watt">
+                    <input type="number" id="kwhPrice" value="0.35" step="0.01" placeholder="€/kWh" data-i18n-placeholder="ph_kwh">
+                </div>
+                <div class="power-cost" id="powerCostDisplay">= 0.00 <span class="currency-symbol">€</span></div>
+            </div>
+
+            <div class="highlight-ops">
+                <label style="margin-bottom: 10px; color: #9a3412;" data-i18n="l_services_head">Infrastruktur & Services (Monatlich)</label>
+                
+                <div class="services-row services-header" aria-hidden="true">
+                    <span></span>
+                    <span class="col-head" data-i18n="col_month">Monat</span>
+                    <span class="col-head" data-i18n="col_year">Jahr</span>
+                </div>
+
+                <div class="services-row">
+                    <label data-i18n="l_vps_cost">VPS / Hosting / IPTV</label>
+                    <input type="number" id="vpsMonthly" value="0" placeholder="Monat" data-i18n-placeholder="ph_month">
+                    <input type="number" id="vpsYearly" value="0" placeholder="Jahr" data-i18n-placeholder="ph_year">
+                </div>
+                
+                <div class="services-row">
+                    <label data-i18n="l_vpn_cost">VPN Service</label>
+                    <input type="number" id="vpnCost" value="0" placeholder="Monat" data-i18n-placeholder="ph_month">
+                    <input type="number" id="vpnYearly" value="0" placeholder="Jahr" data-i18n-placeholder="ph_year">
+                </div>
+
+                <div class="services-row">
+                    <label data-i18n="l_usenet_cost">Usenet Provider</label>
+                    <input type="number" id="usenetCost" value="0" placeholder="Monat" data-i18n-placeholder="ph_month">
+                    <input type="number" id="usenetYearly" value="0" placeholder="Jahr" data-i18n-placeholder="ph_year">
+                </div>
+
+                <div class="services-row">
+                    <label data-i18n="l_indexer_cost">Indexer</label>
+                    <input type="number" id="indexerCost" value="0" placeholder="Monat" data-i18n-placeholder="ph_month">
+                    <input type="number" id="indexerYearly" value="0" placeholder="Jahr" data-i18n-placeholder="ph_year">
+                </div>
+                <div class="hint" data-i18n="h_services_hint">Falls Jahresabo: einfach Jahrespreis eintragen, der Monatspreis wird automatisch berechnet.</div>
+            </div>
+
+            <div class="stat-item" style="background: #e2e8f0; color: var(--text); margin-top: 20px;">
+                <div class="stat-label" data-i18n="l_total_opex">Summe Ausgaben monatlich</div>
+                <div class="stat-value" id="totalMonthlyOut">0,00 €</div>
+            </div>
+        </div>
+
+        <div class="card full-width">
+            <h2 data-i18n="h_subs">3. Eingesparte Abos (Vergleich)</h2>
+            <p class="hint" data-i18n="h_subs_hint">Wähle Dienste, die du kündigen würdest.</p>
+            
+            <div id="subsList"></div>
+            
+            <div class="input-group" style="margin-top: 15px;">
+                <label data-i18n="l_custom_sub">Manuelle Ersparnis</label>
+                <input type="number" id="customSub" value="0" placeholder="0.00">
+            </div>
+            
+            <div style="text-align: right; font-weight: bold; margin-top: 10px;">
+                <span data-i18n="l_sum_subs">Summe Abos:</span> <span id="totalSubs">0,00 €</span>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+
+            <h3 data-i18n="h_income" style="margin-top: 0;">4. Einnahmen (Pssst…)</h3>
+            <p class="hint" data-i18n="h_income_hint">Wenn du jetzt “Plex verkaufen” anklickst: ich urteile nicht. Also doch. Ein bisschen.</p>
+
+            <div id="incomeList"></div>
+
+            <div style="text-align: right; font-weight: bold; margin-top: 10px;">
+                <span data-i18n="l_sum_income">Summe Einnahmen:</span> <span id="totalIncome">0,00 €</span>
+            </div>
+        </div>
+
+        <div class="card full-width result-box">
+            <h2 data-i18n="h_result">Ergebnis</h2>
+            <div data-i18n="r_intro">Break-Even Point nach:</div>
+            <div id="amortizationTime" class="big-number">--</div>
+            <div id="amortizationDate" style="margin-bottom: 20px; color: #94a3b8;">--</div>
+
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <div class="stat-label" data-i18n="r_total_invest">Investition (Hardware + Setup)</div>
+                    <div class="stat-value" id="totalInvest">0,00 €</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label" data-i18n="r_monthly_profit">Monatliche Ersparnis (Abos - Kosten)</div>
+                    <div class="stat-value" id="monthlyProfit">0,00 €</div>
+                </div>
+            </div>
+            <p id="verdict" style="margin-top: 15px; font-style: italic;"></p>
+        </div>
+
+        <div class="card full-width">
+            <h2 data-i18n="h_invest">5. Ersparnis anlegen (Zinseszins)</h2>
+            <p class="hint" data-i18n="h_invest_hint">Rechnet: Wenn du die monatliche Ersparnis (aus „Ergebnis“) zusätzlich monatlich anlegst.</p>
+
+            <div class="grid" style="grid-template-columns: 1fr; gap: 15px;">
+                <div class="input-group" style="margin-bottom: 0;">
+                    <label data-i18n="l_invest_rate">Wachstum p.a. (%)</label>
+                    <input type="number" id="investRate" value="3" step="0.1" min="0" max="20">
+                </div>
+            </div>
+
+            <div class="stat-grid" style="margin-top: 15px;">
+                <div class="stat-item" style="background: #e2e8f0; color: var(--text);">
+                    <div class="stat-label" data-i18n="l_invest_monthly">Monatliche Anlage (aus Ersparnis)</div>
+                    <div class="stat-value" id="investMonthly">0,00 €</div>
+                </div>
+                <div class="stat-item" style="background: #e2e8f0; color: var(--text);">
+                    <div class="stat-label" data-i18n="l_invest_horizon">Zeitraum (bis Amortisierung)</div>
+                    <div class="stat-value" id="investHorizon">--</div>
+                </div>
+                <div class="stat-item" style="background: #e2e8f0; color: var(--text);">
+                    <div class="stat-label" data-i18n="l_invest_break_even">Amortisiert durch Anlegen nach</div>
+                    <div class="stat-value" id="investBreakEven">--</div>
+                </div>
+                <div class="stat-item" style="background: #e2e8f0; color: var(--text);">
+                    <div class="stat-label" data-i18n="l_invest_saved">Zeitgewinn</div>
+                    <div class="stat-value" id="investSaved">--</div>
+                </div>
+                <div class="stat-item" style="background: #e2e8f0; color: var(--text);">
+                    <div class="stat-label" data-i18n="l_invest_total_paid">Eingezahlt bis dahin</div>
+                    <div class="stat-value" id="investTotalPaid">0,00 €</div>
+                </div>
+                <div class="stat-item" style="background: #e2e8f0; color: var(--text);">
+                    <div class="stat-label" data-i18n="l_invest_interest">Zinsen / Wachstum bis dahin</div>
+                    <div class="stat-value" id="investInterest">0,00 €</div>
+                </div>
+            </div>
+
+            <p class="hint" data-i18n="h_invest_note" style="margin-top: 10px;">
+                Hinweis: Das ist eine grobe Modellrechnung ohne Steuern/Gebühren. Wenn deine Ersparnis ≤ 0 ist, wird 0 € angelegt.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div id="dareModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="dareTitle">
+    <div class="modal">
+        <div id="dareTitle" class="modal-title" data-i18n="dare_title">I DARE YOU DOING THAT.</div>
+        <div id="dareBody" style="white-space: pre-wrap;" data-i18n="dare_body"></div>
+        <div class="modal-actions">
+            <button type="button" id="dareCancel" class="icon-button" data-i18n="dare_cancel">Okay okay… ich bin brav</button>
+            <button type="button" id="dareConfirm" class="icon-button" data-i18n="dare_confirm">Close your eyes – continue anyway</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- DATEN ---
+    const translations = {
+        de: {
+            title: "🏠 Server ROI & Schönrechner (HÖR AUF FESTPLATTEN ZU KAUFEN!)",
+            subtitle: "Rechnet dir deinen Server schön. Und erinnert dich daran, keine weiteren Festplatten zu kaufen.",
+            ph_watt: "Watt",
+            ph_kwh: "€/kWh",
+            ph_month: "Monat",
+            ph_year: "Jahr",
+            h_hardware: "1. Investition (Einmalig)",
+            l_base: "Hardware (Server / PC / Box)",
+            h_base_hint: "Hardwarekosten oder Kaufpreis Box",
+            l_setup_fee: "Setup Gebühr (Einmalig)",
+            h_setup_hint: "Einrichtungsgebühr für VPS oder Dienst",
+            l_storage: "Festplatten (Optional)",
+            l_size: "Größe (TB)",
+            l_price: "Preis",
+            l_count: "Anz.",
+            h_power: "2. Laufende Kosten (Monatlich)",
+            l_watts: "Strom (Watt & Preis/kWh)",
+            l_services_head: "Infrastruktur & Services (Monatlich)",
+            col_month: "Monat",
+            col_year: "Jahr",
+            l_vps_cost: "VPS / Hosting",
+            l_vpn_cost: "VPN",
+            l_usenet_cost: "Usenet Prov.",
+            l_indexer_cost: "Indexer",
+            h_services_hint: "",
+            l_total_opex: "Summe Ausgaben monatlich",
+            h_subs: "3. Eingesparte Abos",
+            h_subs_hint: "Dienste, die ersetzt werden.",
+            l_custom_sub: "Sonstige Ersparnis (Manuell)",
+            l_sum_subs: "Summe Abos:",
+            h_income: "4. Einnahmen (Pssst…)",
+            h_income_hint: "Wenn du jetzt “Plex verkaufen” anklickst: ich urteile nicht. Also doch. Ein bisschen.",
+            l_sum_income: "Summe Einnahmen:",
+            h_invest: "5. Ersparnis anlegen (Zinseszins)",
+            h_invest_hint: "Rechnet: Wenn du die monatliche Ersparnis (aus „Ergebnis“) zusätzlich monatlich anlegst.",
+            l_invest_rate: "Wachstum p.a. (%)",
+            l_invest_monthly: "Monatliche Anlage (aus Ersparnis)",
+            l_invest_total_paid: "Eingezahlt gesamt",
+            l_invest_horizon: "Zeitraum (bis Amortisierung)",
+            l_invest_break_even: "Amortisiert durch Anlegen nach",
+            l_invest_saved: "Zeitgewinn",
+            l_invest_interest: "Zinsen / Wachstum bis dahin",
+            h_invest_note: "Hinweis: Das ist eine grobe Modellrechnung ohne Steuern/Gebühren. Wenn deine Ersparnis ≤ 0 ist, wird 0 € angelegt.",
+            h_result: "Ergebnis",
+            r_intro: "Amortisiert nach:",
+            r_total_invest: "Gesamt Investition",
+            r_monthly_profit: "Monatliche Ersparnis (Netto)",
+            verdict_loss: "Verlustgeschäft: Die Kosten sind höher als die Ersparnis.",
+            verdict_immediate: "Sofort rentabel! (Keine Investitionskosten)",
+            verdict_long: "Lange Amortisationszeit (> 5 Jahre).",
+            verdict_win: "Lohnt sich!",
+            never: "Niemals",
+            reason_loss: "Laufende Kosten > Abo Kosten.",
+            unit_months: "Monate",
+            unit_years: "Jahre",
+            tip_expensive: "Teuer pro TB.",
+            tip_cheap: "Guter Preis pro TB.",
+            tip_base: "Ø",
+            power_prefix: "Strom:",
+            hw_cpu: "CPU",
+            hw_ram: "RAM",
+            hw_board: "Mainboard",
+            hw_psu: "Netzteil",
+            hw_case: "Gehäuse",
+            hw_misc: "Sonstiges",
+            hw_detail_sum: "Summe Hardware-Details",
+            btn_hw_details_show: "Detailkalkulation",
+            btn_hw_details_hide: "Detailkalkulation ausblenden",
+            btn_add_hdd: "+ Festplatte",
+            hdd_label_size: "TB",
+            hdd_label_price: "Preis",
+            hdd_label_count: "Anz.",
+            dare_title: "I DARE YOU DOING THAT.",
+            dare_body: "Du hast gerade den 'Einnahmen'-Schalter aktiviert.\nDer ROI-Rechner hat kurz so getan, als hätte er Prinzipien.\n\nDas hier ist keine Anleitung – nur Mathe.\nWas du daraus machst, ist dein Ding.\n\nWenn du trotzdem weitermachen willst:\natme tief durch, schließe die Augen… und klick den großen Quatsch-Button.",
+            dare_cancel: "Okay okay… ich bin brav",
+            dare_confirm: "Augen zu – trotzdem weiter",
+            income_persons_short: "Pers.",
+            income_persons_title: "Personen",
+            income_price_title: "Preis pro Person",
+            immediate: "Sofort"
+        },
+        en: {
+            title: "🏠 Server ROI & Justification Tool (STOP BUYING DRIVES!)",
+            subtitle: "Helps you justify your server. And reminds you to stop buying more drives.",
+            ph_watt: "Watts",
+            ph_kwh: "Price/kWh",
+            ph_month: "Month",
+            ph_year: "Year",
+            h_hardware: "1. Investment (One-Time)",
+            l_base: "Hardware (Server / Device)",
+            h_base_hint: "Hardware cost or Box price",
+            l_setup_fee: "Setup Fee (One-Time)",
+            h_setup_hint: "Setup fee for VPS or Service",
+            l_storage: "Storage (Optional)",
+            l_size: "Size (TB)",
+            l_price: "Price",
+            l_count: "Qty",
+            h_power: "2. Operating Costs (Monthly)",
+            l_watts: "Power (Watts & Price/kWh)",
+            l_services_head: "Infrastructure & Services (Monthly)",
+            col_month: "Month",
+            col_year: "Year",
+            l_vps_cost: "VPS / Hosting",
+            l_vpn_cost: "VPN",
+            l_usenet_cost: "Usenet Prov.",
+            l_indexer_cost: "Indexer",
+            h_services_hint: "",
+            l_total_opex: "Total Monthly Expenses",
+            h_subs: "3. Savings (Subscriptions)",
+            h_subs_hint: "Services being replaced.",
+            l_custom_sub: "Other Savings (Manual)",
+            l_sum_subs: "Total Subs:",
+            h_income: "4. Income (Pssst…)",
+            h_income_hint: "If you click “sell Plex” now: I won’t judge. Okay, I will. Just a little.",
+            l_sum_income: "Total Income:",
+            h_invest: "5. Invest savings (compound interest)",
+            h_invest_hint: "Calculates what happens if you invest the monthly net savings from the result.",
+            l_invest_rate: "Growth p.a. (%)",
+            l_invest_monthly: "Monthly investment (from savings)",
+            l_invest_total_paid: "Total contributions",
+            l_invest_horizon: "Horizon (until break-even)",
+            l_invest_break_even: "Break-even by investing after",
+            l_invest_saved: "Time saved",
+            l_invest_interest: "Growth / interest until then",
+            h_invest_note: "Note: Rough model without taxes/fees. If savings ≤ 0, monthly investment is 0.",
+            h_result: "Result",
+            r_intro: "Break-even in:",
+            r_total_invest: "Total Investment",
+            r_monthly_profit: "Monthly Savings (Net)",
+            verdict_loss: "Loss: Running costs exceed savings.",
+            verdict_immediate: "Immediately Profitable! (No CAPEX)",
+            verdict_long: "Long ROI time (> 5 years).",
+            verdict_win: "Worth it!",
+            never: "Never",
+            reason_loss: "OpEx > Savings.",
+            unit_months: "months",
+            unit_years: "years",
+            tip_expensive: "Expensive per TB.",
+            tip_cheap: "Good price per TB.",
+            tip_base: "Ø",
+            power_prefix: "Power:",
+            hw_cpu: "CPU",
+            hw_ram: "RAM",
+            hw_board: "Mainboard",
+            hw_psu: "Power supply",
+            hw_case: "Case",
+            hw_misc: "Other",
+            hw_detail_sum: "Total hardware details",
+            btn_hw_details_show: "Show detailed breakdown",
+            btn_hw_details_hide: "Hide detailed breakdown",
+            btn_add_hdd: "+ Drive",
+            hdd_label_size: "TB",
+            hdd_label_price: "Price",
+            hdd_label_count: "Qty",
+            dare_title: "I DARE YOU DOING THAT.",
+            dare_body: "You just enabled the 'income' switch.\nThe ROI calculator briefly pretended it has principles.\n\nThis is not a how‑to guide—just math.\nWhat you do with it is your call.\n\nIf you still want to continue:\nTake a deep breath, close your eyes… and hit the big nonsense button.",
+            dare_cancel: "Okay okay… I behave",
+            dare_confirm: "Close your eyes – continue anyway",
+            income_persons_short: "ppl",
+            income_persons_title: "People",
+            income_price_title: "Price per person",
+            immediate: "Immediately"
+        }
+    };
+
+    const currencies = { EUR: "€", USD: "$", GBP: "£", CHF: "Fr" };
+
+    const services = [
+        { name: "Netflix (Standard)", price: 13.99, id: "netflix" },
+        { name: "Netflix (4K)", price: 19.99, id: "netflix_prem" },
+        { name: "Disney+", price: 8.99, id: "disney" },
+        { name: "Prime Video", price: 8.99, id: "prime" },
+        { name: "Spotify/Tidal", price: 10.99, id: "music" },
+        { name: "HBO", price: 9.99, id: "hbo" },
+        { name: "Apple TV+", price: 9.99, id: "appletv" },
+        { name: "Paramount+", price: 7.99, id: "paramount" },
+        { name: "WOW", price: 9.99, id: "wow" },
+        { name: "RTL+", price: 6.99, id: "rtlplus" },
+        { name: "Joyn PLUS+", price: 6.99, id: "joyn" },
+        { name: "Cloud storage (Google/Apple/OneDrive …)", price: 9.99, id: "cloud" }
+    ];
+
+    let currentLang = 'de';
+    let currentCurrency = 'EUR';
+
+    // --- INIT ---
+    const subsContainer = document.getElementById('subsList');
+    services.forEach(service => {
+        const div = document.createElement('div');
+        div.className = 'sub-item';
+        div.innerHTML = `
+            <div class="sub-left">
+                <input type="checkbox" id="cb_${service.id}" class="sub-checkbox">
+                <label for="cb_${service.id}" style="margin:0; font-weight: normal;">${service.name}</label>
+            </div>
+            <div class="sub-price-wrapper">
+                <input type="number" class="sub-price-input" value="${service.price}" step="0.01">
+                <span class="currency-symbol">€</span>
+            </div>
+        `;
+        subsContainer.appendChild(div);
+    });
+
+    const incomes = [
+        { name: "Plex / sharing streaming accounts", price: 10.00, id: "plex" }
+    ];
+
+    const incomeContainer = document.getElementById('incomeList');
+    incomes.forEach(income => {
+        const div = document.createElement('div');
+        div.className = 'sub-item income-item';
+        const t = translations[currentLang];
+        div.innerHTML = `
+            <div class="sub-left">
+                <input type="checkbox" id="inc_${income.id}" class="income-checkbox">
+                <label for="inc_${income.id}" style="margin:0; font-weight: normal;">${income.name}</label>
+            </div>
+            <div class="sub-price-wrapper">
+                <input type="number" class="income-count-input sub-count-input" value="1" min="0" step="1" title="${t.income_persons_title}">
+                <span class="income-persons-label" style="font-size:0.8rem; color:#64748b;">${t.income_persons_short}</span>
+                <input type="number" class="income-price-input sub-price-input" value="${income.price}" step="0.01" title="${t.income_price_title}">
+                <span class="currency-symbol">€</span>
+            </div>
+        `;
+        const checkbox = div.querySelector('.income-checkbox');
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                openDareModal().then((ok) => {
+                    if (!ok) checkbox.checked = false;
+                    calculate();
+                });
+                return;
+            }
+            calculate();
+        });
+        div.querySelectorAll('input').forEach(input => {
+            if (input !== checkbox) {
+                input.addEventListener('input', calculate);
+            }
+        });
+        incomeContainer.appendChild(div);
+    });
+
+    const hddList = document.getElementById('hddList');
+    const addHddBtn = document.getElementById('addHddBtn');
+
+    function addHddRow(size = 0, price = 0, count = 1) {
+        const row = document.createElement('div');
+        row.className = 'hdd-row';
+        const t = translations[currentLang];
+        row.innerHTML = `
+            <div class="col">
+                <label style="font-size: 0.8rem">${t.hdd_label_size}</label>
+                <input type="number" class="hdd-size" value="${size}">
+            </div>
+            <div class="col">
+                <label style="font-size: 0.8rem">${t.hdd_label_price}</label>
+                <input type="number" class="hdd-price" value="${price}">
+            </div>
+            <div class="col-small">
+                <label style="font-size: 0.8rem">${t.hdd_label_count}</label>
+                <input type="number" class="hdd-count" value="${count}">
+            </div>
+            <button type="button" class="icon-button small remove-hdd">−</button>
+        `;
+        row.querySelectorAll('input').forEach(input => input.addEventListener('input', calculate));
+        row.querySelector('.remove-hdd').addEventListener('click', () => {
+            if (hddList.children.length > 1) {
+                hddList.removeChild(row);
+                calculate();
+            } else {
+                // letzte Zeile nur zurücksetzen
+                row.querySelectorAll('input').forEach(input => input.value = 0);
+                calculate();
+            }
+        });
+        hddList.appendChild(row);
+    }
+
+    addHddBtn.addEventListener('click', () => addHddRow());
+    addHddRow(0, 0, 1);
+
+    document.getElementById('langSelect').addEventListener('change', (e) => { currentLang = e.target.value; updateLanguage(); calculate(); });
+    document.getElementById('currSelect').addEventListener('change', (e) => { currentCurrency = e.target.value; updateCurrencySymbols(); calculate(); });
+    document.querySelectorAll('input').forEach(input => input.addEventListener('input', calculate));
+
+    const toggleHardwareDetailsBtn = document.getElementById('toggleHardwareDetails');
+    const hardwareDetails = document.getElementById('hardwareDetails');
+    if (toggleHardwareDetailsBtn && hardwareDetails) {
+        toggleHardwareDetailsBtn.addEventListener('click', () => {
+            const isHidden = hardwareDetails.style.display === 'none' || hardwareDetails.style.display === '';
+            hardwareDetails.style.display = isHidden ? 'block' : 'none';
+            const t = translations[currentLang];
+            toggleHardwareDetailsBtn.textContent = isHidden ? t.btn_hw_details_hide : t.btn_hw_details_show;
+        });
+        ['hwCpu', 'hwRam', 'hwBoard', 'hwPsu', 'hwCase', 'hwMisc'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateHardwareDetailTotal);
+        });
+    }
+
+    // --- FUNKTIONEN ---
+    function updateLanguage() {
+        const t = translations[currentLang];
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (t[key]) el.textContent = t[key];
+        });
+
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (t[key]) el.setAttribute('placeholder', t[key]);
+        });
+
+        const toggleHardwareDetailsBtn = document.getElementById('toggleHardwareDetails');
+        const hardwareDetails = document.getElementById('hardwareDetails');
+        if (toggleHardwareDetailsBtn && hardwareDetails) {
+            const isHidden = hardwareDetails.style.display === 'none' || hardwareDetails.style.display === '';
+            toggleHardwareDetailsBtn.textContent = isHidden ? t.btn_hw_details_show : t.btn_hw_details_hide;
+        }
+
+        // Update small labels in income section (if already rendered)
+        document.querySelectorAll('.income-persons-label').forEach(el => {
+            el.textContent = t.income_persons_short;
+        });
+
+        updateCurrencySymbols();
+    }
+
+    function updateCurrencySymbols() {
+        const symbol = currencies[currentCurrency];
+        document.querySelectorAll('.currency-symbol').forEach(el => el.textContent = symbol);
+    }
+
+    const dareModal = document.getElementById('dareModal');
+    const dareBody = document.getElementById('dareBody');
+    const dareCancel = document.getElementById('dareCancel');
+    const dareConfirm = document.getElementById('dareConfirm');
+    let dareResolver = null;
+
+    function openDareModal(message) {
+        if (!dareModal) return Promise.resolve(true);
+        const t = translations[currentLang];
+        if (dareBody) dareBody.textContent = message ?? t.dare_body;
+        dareModal.style.display = 'flex';
+
+        return new Promise((resolve) => {
+            dareResolver = resolve;
+        });
+    }
+
+    function closeDareModal(result) {
+        if (dareModal) dareModal.style.display = 'none';
+        if (dareResolver) {
+            dareResolver(result);
+            dareResolver = null;
+        }
+    }
+
+    if (dareCancel) dareCancel.addEventListener('click', () => closeDareModal(false));
+    if (dareConfirm) dareConfirm.addEventListener('click', () => closeDareModal(true));
+    if (dareModal) {
+        dareModal.addEventListener('click', (e) => {
+            if (e.target === dareModal) closeDareModal(false);
+        });
+    }
+
+    function updateHardwareDetailTotal() {
+        const ids = ['hwCpu', 'hwRam', 'hwBoard', 'hwPsu', 'hwCase', 'hwMisc'];
+        let sum = 0;
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) sum += parseFloat(el.value) || 0;
+        });
+        const totalSpan = document.getElementById('hwDetailTotal');
+        if (totalSpan) totalSpan.textContent = formatMoney(sum);
+
+        if (sum > 0) {
+            const baseHwInput = document.getElementById('baseHardware');
+            if (baseHwInput) {
+                baseHwInput.value = sum.toFixed(2);
+            }
+        }
+        calculate();
+    }
+
+    function formatMoney(amount) {
+        return new Intl.NumberFormat(currentLang === 'de' ? 'de-DE' : 'en-US', {
+            style: 'currency', currency: currentCurrency
+        }).format(amount);
+    }
+
+    function projectMonthlyInvest(monthlyContribution, annualRatePercent, months) {
+        const m = Math.max(0, Math.floor(months || 0));
+        const c = Math.max(0, monthlyContribution || 0);
+        const r = Math.max(0, annualRatePercent || 0) / 100;
+        const mr = Math.pow(1 + r, 1 / 12) - 1; // effektiv monatlich
+
+        let balance = 0;
+        for (let i = 0; i < m; i++) {
+            balance = balance * (1 + mr) + c;
+        }
+        const paid = c * m;
+        const interest = balance - paid;
+        return { balance, paid, interest };
+    }
+
+    function monthsToReachTarget(monthlyContribution, annualRatePercent, target, maxMonths = 2400) {
+        const c = Math.max(0, monthlyContribution || 0);
+        const t = Math.max(0, target || 0);
+        const r = Math.max(0, annualRatePercent || 0) / 100;
+        const mr = Math.pow(1 + r, 1 / 12) - 1; // effektiv monatlich
+
+        if (t <= 0) return { months: 0, balance: 0, paid: 0, interest: 0 };
+        if (c <= 0) return { months: Infinity, balance: 0, paid: 0, interest: 0 };
+
+        let balance = 0;
+        let months = 0;
+        while (months < maxMonths && balance < t) {
+            balance = balance * (1 + mr) + c;
+            months++;
+        }
+        const paid = c * months;
+        const interest = balance - paid;
+        return { months: balance >= t ? months : Infinity, balance, paid, interest };
+    }
+
+    function formatDurationMonths(months, t) {
+        if (!isFinite(months)) return "—";
+        const m = Math.max(0, Math.round(months));
+        const years = Math.floor(m / 12);
+        const rem = m % 12;
+        if (years <= 0) return `${m} ${t.unit_months}`;
+        if (rem <= 0) return `${years} ${t.unit_years}`;
+        return `${years} ${t.unit_years} ${rem} ${t.unit_months}`;
+    }
+
+    function calculate() {
+        const t = translations[currentLang];
+
+        // 1. INVESTITION
+        const baseHw = parseFloat(document.getElementById('baseHardware').value) || 0;
+        const setupFee = parseFloat(document.getElementById('setupFee').value) || 0;
+        let totalHddCost = 0;
+        let totalHddSize = 0;
+        document.querySelectorAll('.hdd-row').forEach(row => {
+            const size = parseFloat(row.querySelector('.hdd-size').value) || 0;
+            const price = parseFloat(row.querySelector('.hdd-price').value) || 0;
+            const count = parseFloat(row.querySelector('.hdd-count').value) || 0;
+            if (price > 0 && count > 0) {
+                totalHddCost += price * count;
+            }
+            if (size > 0 && price > 0 && count > 0) {
+                totalHddSize += size * count;
+            }
+        });
+
+        const totalInvest = baseHw + setupFee + totalHddCost;
+
+        // TB Skalierung (durchschnittlicher Preis über alle Platten)
+        const scaleDiv = document.getElementById('storageScaling');
+        if (totalHddSize > 0 && totalHddCost > 0) {
+            scaleDiv.style.display = 'block';
+            const tbPrice = (totalHddCost / totalHddSize);
+            let scaleText = `${t.tip_base} ${formatMoney(tbPrice).replace(currencies[currentCurrency], '').trim()} / TB.`;
+            if (tbPrice > 25) scaleText += ` <span style="color:#d97706">${t.tip_expensive}</span>`;
+            else if (tbPrice < 17) scaleText += ` <span style="color:#16a34a">${t.tip_cheap}</span>`;
+            scaleDiv.innerHTML = scaleText;
+        } else if (scaleDiv) {
+            scaleDiv.style.display = 'none';
+        }
+
+        // 2. AUSGABEN (OPEX)
+        const watts = parseFloat(document.getElementById('watts').value) || 0;
+        const kwhPrice = parseFloat(document.getElementById('kwhPrice').value) || 0;
+        
+        // Infrastructure Costs
+        let vpsMonthly = parseFloat(document.getElementById('vpsMonthly').value) || 0;
+        let vpnCost = parseFloat(document.getElementById('vpnCost').value) || 0;
+        let usenetCost = parseFloat(document.getElementById('usenetCost').value) || 0;
+        let indexerCost = parseFloat(document.getElementById('indexerCost').value) || 0;
+
+        const vpsYearly = parseFloat(document.getElementById('vpsYearly').value) || 0;
+        const vpnYearly = parseFloat(document.getElementById('vpnYearly').value) || 0;
+        const usenetYearly = parseFloat(document.getElementById('usenetYearly').value) || 0;
+        const indexerYearly = parseFloat(document.getElementById('indexerYearly').value) || 0;
+
+        if (vpsYearly > 0) vpsMonthly = vpsYearly / 12;
+        if (vpnYearly > 0) vpnCost = vpnYearly / 12;
+        if (usenetYearly > 0) usenetCost = usenetYearly / 12;
+        if (indexerYearly > 0) indexerCost = indexerYearly / 12;
+
+        const monthlyPower = (watts / 1000) * 24 * 30 * kwhPrice;
+        const totalMonthlyOut = monthlyPower + vpsMonthly + vpnCost + usenetCost + indexerCost;
+
+        document.getElementById('powerCostDisplay').innerHTML = `${t.power_prefix} ${formatMoney(monthlyPower)}`;
+
+        // 3. ERSPARNIS
+        let subSum = 0;
+        document.querySelectorAll('.sub-item').forEach(item => {
+            if (item.querySelector('.sub-checkbox') && item.querySelector('.sub-checkbox').checked) {
+                subSum += parseFloat(item.querySelector('.sub-price-input').value) || 0;
+            }
+        });
+        subSum += parseFloat(document.getElementById('customSub').value) || 0;
+
+        // 3b. EINNAHMEN (Witz / Warnung)
+        let incomeSum = 0;
+        document.querySelectorAll('.income-item').forEach(item => {
+            if (item.querySelector('.income-checkbox') && item.querySelector('.income-checkbox').checked) {
+                const price = parseFloat(item.querySelector('.income-price-input').value) || 0;
+                const count = parseFloat(item.querySelector('.income-count-input')?.value) || 0;
+                incomeSum += price * count;
+            }
+        });
+
+        // 4. ERGEBNIS
+        const monthlyProfit = subSum + incomeSum - totalMonthlyOut;
+        
+        document.getElementById('totalInvest').textContent = formatMoney(totalInvest);
+        document.getElementById('totalMonthlyOut').textContent = formatMoney(totalMonthlyOut);
+        document.getElementById('totalSubs').textContent = formatMoney(subSum);
+        document.getElementById('totalIncome').textContent = formatMoney(incomeSum);
+        
+        const profitEl = document.getElementById('monthlyProfit');
+        profitEl.textContent = formatMoney(monthlyProfit);
+        profitEl.className = 'stat-value ' + (monthlyProfit > 0 ? 'positive' : 'negative');
+
+        // 5. ERSPARNIS ANLEGEN (ZINSESZINS) – Basis = monatliche Ersparnis aus "Ergebnis"
+        const investRate = parseFloat(document.getElementById('investRate')?.value) || 0;
+        const investMonthly = Math.max(0, monthlyProfit);
+
+        const investMonthlyEl = document.getElementById('investMonthly');
+        const investHorizonEl = document.getElementById('investHorizon');
+        const investBreakEvenEl = document.getElementById('investBreakEven');
+        const investSavedEl = document.getElementById('investSaved');
+        const investPaidEl = document.getElementById('investTotalPaid');
+        const investInterestEl = document.getElementById('investInterest');
+
+        if (investMonthlyEl) investMonthlyEl.textContent = formatMoney(investMonthly);
+
+        // Wichtig: Vergleich muss "diskret" in Monaten passieren, sonst frisst Rundung den Effekt.
+        // Basis: ohne Anlegen = 0% Rendite (linear) vs. mit Rendite = investRate.
+        const baseReach = monthsToReachTarget(investMonthly, 0, totalInvest, 2400);
+        const baseMonths = baseReach.months;
+
+        if (!isFinite(baseMonths) || baseMonths <= 0) {
+            if (investHorizonEl) investHorizonEl.textContent = "—";
+            if (investBreakEvenEl) investBreakEvenEl.textContent = "—";
+            if (investSavedEl) investSavedEl.textContent = "—";
+            if (investPaidEl) investPaidEl.textContent = formatMoney(0);
+            if (investInterestEl) investInterestEl.textContent = formatMoney(0);
+        } else {
+            // Horizon = Amortisation ohne Rendite (diskret in Monaten)
+            if (investHorizonEl) investHorizonEl.textContent = formatDurationMonths(baseMonths, t);
+
+            // Neue "Amortisation" wenn man die Monatsersparnis anlegt und das Depot die Investition erreicht
+            const reach = monthsToReachTarget(investMonthly, investRate, totalInvest, 2400);
+            if (investBreakEvenEl) investBreakEvenEl.textContent = formatDurationMonths(reach.months, t);
+
+            const saved = (isFinite(reach.months) && isFinite(baseMonths)) ? (baseMonths - reach.months) : 0;
+            if (investSavedEl) {
+                investSavedEl.textContent = (isFinite(reach.months) && saved > 0)
+                    ? `${Math.round(saved)} ${t.unit_months}`
+                    : `0 ${t.unit_months}`;
+            }
+
+            if (investPaidEl) investPaidEl.textContent = formatMoney(reach.paid || 0);
+            if (investInterestEl) investInterestEl.textContent = formatMoney(reach.interest || 0);
+        }
+
+        const resultTime = document.getElementById('amortizationTime');
+        const resultDate = document.getElementById('amortizationDate');
+        const verdict = document.getElementById('verdict');
+
+        if (monthlyProfit <= 0) {
+            resultTime.textContent = t.never;
+            resultDate.textContent = t.reason_loss;
+            verdict.textContent = t.verdict_loss;
+            verdict.style.color = "#fca5a5";
+        } else if (totalInvest <= 0) {
+            resultTime.textContent = t.immediate;
+            resultDate.textContent = "";
+            verdict.textContent = t.verdict_immediate;
+            verdict.style.color = "#86efac";
+        } else {
+            const monthsToBreakEven = totalInvest / monthlyProfit;
+            const years = Math.floor(monthsToBreakEven / 12);
+            const remainingMonths = Math.round(monthsToBreakEven % 12);
+            
+            resultTime.textContent = `${monthsToBreakEven.toFixed(1)} ${t.unit_months}`;
+            
+            let timeString = "";
+            if (years > 0) timeString += `${years} ${t.unit_years} `;
+            if (remainingMonths > 0) timeString += `${remainingMonths} ${t.unit_months}`;
+            
+            resultDate.textContent = `~ ${timeString}`;
+            
+            if (monthsToBreakEven > 60) {
+                verdict.textContent = t.verdict_long;
+                verdict.style.color = "#fbbf24";
+            } else {
+                verdict.textContent = t.verdict_win;
+                verdict.style.color = "#86efac";
+            }
+        }
+    }
+
+    // Start
+    updateLanguage();
+    calculate();
+</script>
+
+</body>
+</html>
